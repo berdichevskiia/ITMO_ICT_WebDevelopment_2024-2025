@@ -52,9 +52,13 @@ class MyHTTPServer:
             if len(subject_list) >= 2:
                 new_subject = subject_list[0].split('=')[1]
                 new_mark = subject_list[1].split('=')[1]
-                self._marks[new_subject] = new_mark
+                # Update or add the mark
+                if new_subject in self._marks:
+                    self._marks[new_subject] = new_mark
+                else:
+                    self._marks[new_subject] = new_mark
             else:
-                return '<h1>BadRequest: Invalid request data.</h1>'  # Handle error
+                return '<h1>BadRequest: Invalid request data.</h1>'
 
         return self.generate_page()
 
@@ -77,6 +81,7 @@ class MyHTTPServer:
         html += "</tbody></table>"
         html += '</body></html>'
         return html
+
 
 
 if __name__ == "__main__":
