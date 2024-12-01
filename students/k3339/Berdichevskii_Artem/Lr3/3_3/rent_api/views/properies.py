@@ -42,15 +42,15 @@ class PropertyFreeDatesView(APIView):
     lookup_field = 'pk'
 
     def get(self, request, pk):
-        start_date = parse_or_return(request.GET.get('start_date', date.today()))
-        end_date = parse_or_return(request.GET.get('end_date', start_date + timedelta(days=30)))
+        start_date = request.GET.get('start_date', None) or date.today()
+        end_date = request.GET.get('end_date') or start_date + timedelta(days=30)
         rent_unit = RentUnit.objects.get(pk=pk)
 
-        if end_date < start_date:
+        if parse_or_return(end_date) < parse_or_return(start_date):
             return Response({'error': 'End date must be before start date.'})
 
         return Response(
-            get_free_dates(rent_unit, start_date, end_date)
+            get_free_dates(rent_unit, parse_or_return(start_date), parse_or_return(end_date))
         )
 
 
@@ -61,14 +61,14 @@ class CreateLeaseSuggestionsView(CreateAPIView):
 
     def perform_create(self, serializer):
         rent_unit = RentUnit.objects.get(pk=self.kwargs['pk'])
-        dt_start = serializer.data['dt_start']
-        dt_end = serializer.data['dt_end']
+        dt_start = parse_or_return(serializer.validated_data['dt_start'])
+        dt_end = parse_or_return(serializer.validated_data['dt_end'])
 
         if self.request.user == rent_unit.owner:
             raise PermissionDenied("Property owner can't lease his own property")
 
         available_dates = get_free_dates(rent_unit, dt_start, dt_end)
-        if len(available_dates) != (dt_end - dt_start).days:
+        if len(available_dates)-1 != (dt_end - dt_start).days:
             raise PermissionDenied("Lease overlapping")
 
         serializer.save(tenant=self.request.user,

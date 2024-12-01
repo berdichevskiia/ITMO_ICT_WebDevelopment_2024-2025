@@ -29,7 +29,7 @@ class MyBookingsView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Lease.objects.filter(lease__rent_unit__owner=self.request.user, confirmed=False)
+        return Lease.objects.filter(rent_unit__owner=self.request.user, confirmed=False)
 
 
 class MyArchiveView(ListAPIView):
@@ -37,7 +37,7 @@ class MyArchiveView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Lease.objects.filter(lease__rent_unit__owner=self.request.user, confirmed=True)
+        return Lease.objects.filter(rent_unit__owner=self.request.user, confirmed=True)
 
 
 class MyBookingsUpdateView(RetrieveUpdateAPIView):
@@ -45,7 +45,7 @@ class MyBookingsUpdateView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Lease.objects.filter(lease__rent_unit__owner=self.request.user, confirmed=False)
+        return Lease.objects.filter(rent_unit__owner=self.request.user, confirmed=False)
 
 
 class LandlordPropertyView(ListAPIView):

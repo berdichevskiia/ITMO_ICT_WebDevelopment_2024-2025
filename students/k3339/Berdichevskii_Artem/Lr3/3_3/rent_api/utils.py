@@ -1,5 +1,5 @@
-from datetime import timedelta, datetime
 from dateutil import parser
+import datetime
 
 from .models import Lease
 
@@ -20,14 +20,14 @@ def get_free_dates(rent_unit, start_date, end_date):
     )
 
     all_dates = set(
-        start_date + timedelta(days=i)
+        start_date + datetime.timedelta(days=i)
         for i in range((end_date - start_date).days + 1)
     )
 
     unavailable_dates = set()
     for lease in overlapping_leases:
         lease_dates = set(
-            lease.dt_start + timedelta(days=i)
+            lease.dt_start + datetime.timedelta(days=i)
             for i in range((lease.dt_end - lease.dt_start).days + 1)
         )
         unavailable_dates.update(lease_dates)
@@ -37,6 +37,6 @@ def get_free_dates(rent_unit, start_date, end_date):
     return free_dates
 
 def parse_or_return(dirty_date):
-    if type(dirty_date) == datetime:
+    if type(dirty_date) == datetime.date:
         return dirty_date
     return parser.parse(dirty_date)
