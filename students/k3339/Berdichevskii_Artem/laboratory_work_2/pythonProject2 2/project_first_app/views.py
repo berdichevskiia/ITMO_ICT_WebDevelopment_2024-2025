@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import login, get_user_model, authenticate
+from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import redirect, get_object_or_404, render
 from django.views import View
@@ -7,6 +8,9 @@ from .models import User, Conference, Review, Participant
 from .forms import NewUserForm, ReviewForm, ParticipantForm, ConferenceForm, CustomAuthenticationForm
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.core.paginator import Paginator
+from django.views.generic import ListView
+from .models import Participant
 
 
 class CustomLoginView(View):
@@ -76,12 +80,38 @@ class ParticipantListView(ListView):
     model = Participant
     template_name = 'project_first_app/participants.html'
     context_object_name = 'participants'
+    paginate_by = 10  # Количество участников на странице
 
     def get_queryset(self):
+        query_user = self.request.GET.get('user')
+        query_conference = self.request.GET.get('conference')
+        registered = self.request.GET.get('registered', 'false') == 'true'
         queryset = Participant.objects.all()
-        if self.request.GET.get('user_only'):
-            queryset = queryset.filter(user=self.request.user)
+
+        if registered:
+            queryset = queryset.filter(user__is_active=True)
+
+        if query_user:
+            queryset = queryset.filter(user__username__icontains=query_user)
+        if query_conference:
+            queryset = queryset.filter(conference__title__icontains=query_conference)
+
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+        paginator = Paginator(queryset, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['participants'] = page_obj
+        context['query_user'] = self.request.GET.get('user', '')
+        context['query_conference'] = self.request.GET.get('conference', '')
+        context['registered'] = self.request.GET.get('registered', 'false') == 'true'
+        context['paginator'] = paginator
+        context['page_obj'] = page_obj
+        return context
 
 
 class ConferenceDetailView(DetailView):
