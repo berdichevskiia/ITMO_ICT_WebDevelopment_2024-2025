@@ -795,6 +795,100 @@ Given a roman numeral, convert it to an integer.</p>
                 i, j = i + 1, j - 1
         return True
 </code></pre>
+<p><img alt="Задача 7" src="../images/7.png" />
+Задача 55.</p>
+<p>You are given an integer array nums. You are initially positioned at the array's first index, and each element in the array represents your maximum jump length at that position.</p>
+<p>Return true if you can reach the last index, or false otherwise.</p>
+<p>Example 1:</p>
+<p>Input: nums = [2,3,1,1,4]
+Output: true
+Explanation: Jump 1 step from index 0 to 1, then 3 steps to the last index.
+Example 2:</p>
+<p>Input: nums = [3,2,1,0,4]
+Output: false
+Explanation: You will always arrive at index 3 no matter what. Its maximum jump length is 0, which makes it impossible to reach the last index.</p>
+<p>Constraints:</p>
+<p>1 &lt;= nums.length &lt;= 104
+0 &lt;= nums[i] &lt;= 105</p>
+<pre><code>class Solution:
+    def canJump(self, nums: List[int]) -&gt; bool:
+        def dfs(i):
+            if i == len(nums) - 1:
+                return True
+            end = min(len(nums) - 1, i + nums[i])
+            for j in range(i + 1, end + 1):
+                if dfs(j):
+                    return True
+            return False
+
+        return dfs(0)
+</code></pre>
+<p><img alt="Задача 8" src="../images/8.png" />
+Задача 15.</p>
+<p>Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.</p>
+<p>Notice that the solution set must not contain duplicate triplets.</p>
+<p>Example 1:</p>
+<p>Input: nums = [-1,0,1,2,-1,-4]
+Output: [[-1,-1,2],[-1,0,1]]
+Explanation: 
+nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0.
+nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0.
+nums[0] + nums[3] + nums[4] = (-1) + 2 + (-1) = 0.
+The distinct triplets are [-1,0,1] and [-1,-1,2].
+Notice that the order of the output and the order of the triplets does not matter.
+Example 2:</p>
+<p>Input: nums = [0,1,1]
+Output: []
+Explanation: The only possible triplet does not sum up to 0.
+Example 3:</p>
+<p>Input: nums = [0,0,0]
+Output: [[0,0,0]]
+Explanation: The only possible triplet sums up to 0.</p>
+<pre><code>class Solution:
+    def threeSum(self, nums: List[int]) -&gt; List[List[int]]:
+        nums.sort()
+        n = len(nums)
+        ans = []
+        for i in range(n - 2):
+            if nums[i] &gt; 0:
+                break
+            if i and nums[i] == nums[i - 1]:
+                continue
+            j, k = i + 1, n - 1
+            while j &lt; k:
+                x = nums[i] + nums[j] + nums[k]
+                if x &lt; 0:
+                    j += 1
+                elif x &gt; 0:
+                    k -= 1
+                else:
+                    ans.append([nums[i], nums[j], nums[k]])
+                    j, k = j + 1, k - 1
+                    while j &lt; k and nums[j] == nums[j - 1]:
+                        j += 1
+                    while j &lt; k and nums[k] == nums[k + 1]:
+                        k -= 1
+        return ans
+</code></pre>
+<p><img alt="Задача 9" src="../images/9.png" />
+Задача 11.</p>
+<p>You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).</p>
+<p>Find two lines that together with the x-axis form a container, such that the container contains the most water.</p>
+<p>Return the maximum amount of water a container can store.</p>
+<p>Notice that you may not slant the container.</p>
+<pre><code>class Solution:
+    def maxArea(self, height: List[int]) -&gt; int:
+        i, j = 0, len(height) - 1
+        ans = 0
+        while i &lt; j:
+            t = (j - i) * min(height[i], height[j])
+            ans = max(ans, t)
+            if height[i] &lt; height[j]:
+                i += 1
+            else:
+                j -= 1
+        return ans
+</code></pre>
 
 
 
