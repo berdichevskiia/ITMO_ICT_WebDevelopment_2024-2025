@@ -685,6 +685,112 @@
 
 <p>Цель: получить представление о работе с запросами в Django ORM; овладеть практическими навыками реализации серверной части (backend) приложений средствами Django REST framework.</p>
 <p>Сервис для аренды недвижимости</p>
+<p>Этот код определяет модель Django под названием RentUnit, которая представляет собой единицу аренды, например, квартиру или дом.</p>
+<pre><code>class RentUnit(models.Model):
+    PERIOD_CHOICES = (
+        ('st', 'day'),
+        ('lt', 'month')
+    )
+    description = models.TextField()
+    address = models.CharField(max_length=200)
+    area_sq_m = models.IntegerField()
+    cost = models.IntegerField()
+    per_period = models.CharField(max_length=2, choices=PERIOD_CHOICES)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    is_displayed = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Unit on {self.address} for {self.cost} per {self.per_period}'
+</code></pre>
+<p>Поля модели</p>
+<p>rent_unit: Внешний ключ к модели RentUnit. Если связанная RentUnit удаляется, связанные объекты Lease также удаляются.
+dt_start: Поле даты, указывающее начало аренды.
+dt_end: Поле даты, указывающее конец аренды.
+tenant: Внешний ключ к модели User, представляющий арендатора. Если связанный User удаляется, это поле устанавливается в NULL.
+confirmed: Булево поле, указывающее, подтверждена ли аренда. По умолчанию False.
+Методы</p>
+<p>clean: Проверяет, что дата окончания аренды больше даты начала и что владелец единицы аренды не является арендатором.
+save: Переопределяет метод сохранения, чтобы вызвать full_clean перед сохранением объекта.
+<strong>str</strong>: Возвращает строковое представление объекта, включающее адрес единицы аренды и имя пользователя арендатора.</p>
+<pre><code>class Lease(models.Model):
+    rent_unit = models.ForeignKey(RentUnit, on_delete=models.CASCADE)
+    dt_start = models.DateField()
+    dt_end = models.DateField()
+    tenant = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    confirmed = models.BooleanField(default=False)
+
+    def clean(self):
+        super().clean()
+        if self.dt_start &gt; self.dt_end:
+            raise ValidationError({
+                'dt_end': 'End date must be greater than the start date.'
+            })
+        if self.rent_unit.owner == self.tenant:
+            raise ValidationError({
+                'rent_unit': 'Owner cannot be the same as tenant.'
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Lease on {self.rent_unit.address} for {self.tenant.username}'
+</code></pre>
+<p>Поля модели</p>
+<p>author: Внешний ключ к модели User, представляющий автора отзыва. Если связанный User удаляется, связанные объекты Review также удаляются.
+lease: Однозначный внешний ключ к модели Lease. Если связанная Lease удаляется, связанные объекты Review также удаляются.
+description: Текстовое поле для описания отзыва.
+rating: Положительное целое поле для рейтинга, которое должно быть между 1 и 10.
+dt_published: Поле даты и времени, автоматически устанавливаемое в текущую дату и время при создании объекта.
+Методы</p>
+<p>clean: Проверяет, что автор отзыва является арендатором в связанной аренде и что аренда подтверждена.
+save: Переопределяет метод сохранения, чтобы вызвать full_clean перед сохранением объекта.
+<strong>str</strong>: Возвращает строковое представление объекта, включающее имя автора и адрес единицы аренды.</p>
+<pre><code>class Review(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    lease = models.OneToOneField(Lease, on_delete=models.CASCADE)
+
+    description = models.TextField()
+    rating = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        help_text=&quot;Rating must be between 1 and 10&quot;
+    )
+    dt_published = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        super().clean()
+        if self.author != self.lease.tenant:
+            raise ValidationError({
+                &quot;author&quot;: &quot;Author must be the same as tenant in lease.&quot;
+            })
+        if not self.lease.confirmed:
+            raise ValidationError({
+                &quot;lease&quot;: &quot;Lease must first be confirmed.&quot;
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Review from {self.author} for {self.lease.rent_unit.address}'
+</code></pre>
+<p>Этот сериализатор преобразует объекты модели RentUnit в JSON-формат, включающий поля id, cost, per_period, address и area_sq_m. Поле per_period будет заполнено с помощью пользовательского метода, который нужно будет определить в классе сериализатора.</p>
+<pre><code>class RentUnitListSerializer(serializers.ModelSerializer):
+    per_period  = serializers.SerializerMethodField()
+    class Meta:
+        model = RentUnit
+        fields = [
+            'id',
+            'cost',
+            'per_period',
+            'address',
+            'area_sq_m'
+        ]
+</code></pre>
+<p>Остальные сериализаторы выполнены аналогично.</p>
 
 
 
