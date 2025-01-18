@@ -688,6 +688,95 @@
 <img alt="Задача 1" src="../images/Enter.png" /></p>
 <p>Регистрация
 <img alt="Задача 2" src="../images/Register.png" /></p>
+<p>Роутер</p>
+<pre><code>        {
+            path: &quot;/register&quot;, name: &quot;Register&quot;, component: () =&gt; import('../views/Register.vue'),
+            beforeEnter: (to, from, next) =&gt; {
+                IsAuthenticated.value ? next('/') : next();
+            },
+        },
+        {
+            path: &quot;/login&quot;,
+            name: &quot;Login&quot;,
+            component: () =&gt; import('../views/Login.vue'),
+            beforeEnter: (to, from, next) =&gt; {
+                IsAuthenticated.value ? next('/') : next();
+            },
+        },
+</code></pre>
+<p>Логин</p>
+<pre><code>&lt;template&gt;
+  &lt;div class=&quot;register-container&quot;&gt;
+    &lt;h2&gt;Login&lt;/h2&gt;
+    &lt;form @submit.prevent=&quot;login&quot;&gt;
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label for=&quot;username&quot;&gt;Username&lt;/label&gt;
+        &lt;input
+            type=&quot;text&quot;
+            id=&quot;username&quot;
+            v-model=&quot;username&quot;
+            class=&quot;form-control&quot;
+            autocomplete=&quot;username&quot;
+            required
+        /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label for=&quot;password&quot;&gt;Password&lt;/label&gt;
+        &lt;input
+            type=&quot;password&quot;
+            id=&quot;password&quot;
+            v-model=&quot;password&quot;
+            class=&quot;form-control&quot;
+            autocomplete=&quot;current-password&quot;
+            required
+        /&gt;
+      &lt;/div&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;btn btn-primary&quot;&gt;Log into your account&lt;/button&gt;
+    &lt;/form&gt;
+    &lt;p v-if=&quot;error&quot; class=&quot;text-danger mt-3&quot;&gt;{{ error }}&lt;/p&gt;
+    &lt;p v-if=&quot;success&quot; class=&quot;text-success mt-3&quot;&gt;{{ success }}&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import axiosInstance from &quot;@/services/axios&quot;;
+import router from &quot;@/router/index.js&quot;;
+import {SetAuthToken} from '@/composables/token.js';
+
+export default {
+  name: &quot;LoginView&quot;,
+  data() {
+    return {
+      username: &quot;&quot;,
+      password: &quot;&quot;,
+      error: null,
+      success: null,
+    };
+  },
+  methods: {
+    async login() {
+      this.error = null;
+      this.success = null;
+
+      try {
+        const response = await axiosInstance.post(&quot;auth/token/login/&quot;, {
+          username: this.username,
+          password: this.password,
+        });
+        console.log(response);
+        const data = await response.data;
+        this.success = &quot;Login successful!&quot;;
+        SetAuthToken(data['auth_token']);
+        setTimeout(router.back(), 3)
+
+      } catch (err) {
+        this.error = err.response?.data || &quot;Login failed.&quot;;
+      }
+    },
+  },
+};
+&lt;/script&gt;
+</code></pre>
 <p>Ваш аккаунт 
 <img alt="Задача 3" src="../images/Your_acc.png" /></p>
 <p>Доступные варианты жилья
